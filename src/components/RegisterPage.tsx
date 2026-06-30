@@ -1,37 +1,38 @@
 import { useState } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function RegisterPage({ onNavigate }: { onNavigate: (page: string) => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!name || !email || !password) {
       setMessage("Please fill in all fields");
       return;
     }
 
-    try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
+    setLoading(true);
+    setMessage("");
 
-      const data = await response.json();
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
 
-      if (response.ok) {
-        setMessage("Registration successful!");
-        setTimeout(() => onNavigate("login"), 1000);
-      } else {
-        setMessage(data.message);
-      }
-    } catch (error) {
-      setMessage("Server error");
+    setLoading(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
     }
+
+    setMessage("Registration successful!");
+    setTimeout(() => onNavigate("login"), 1000);
   };
 
   return (
@@ -40,9 +41,7 @@ export default function RegisterPage({ onNavigate }: { onNavigate: (page: string
         onSubmit={handleRegister}
         className="bg-white p-8 rounded-2xl shadow-md w-96 space-y-4"
       >
-        <h2 className="text-2xl font-bold text-center text-gray-800">
-          Create Account
-        </h2>
+        <h2 className="text-2xl font-bold text-center text-gray-800">Create Account</h2>
 
         <input
           type="text"
@@ -50,6 +49,7 @@ export default function RegisterPage({ onNavigate }: { onNavigate: (page: string
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full border border-gray-300 rounded-lg p-2"
+          required
         />
 
         <input
@@ -58,6 +58,7 @@ export default function RegisterPage({ onNavigate }: { onNavigate: (page: string
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full border border-gray-300 rounded-lg p-2"
+          required
         />
 
         <input
@@ -66,13 +67,15 @@ export default function RegisterPage({ onNavigate }: { onNavigate: (page: string
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full border border-gray-300 rounded-lg p-2"
+          required
         />
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
         >
-          Register
+          {loading ? "Registering..." : "Register"}
         </button>
 
         <p className="text-sm text-center text-gray-600 mt-2">
@@ -86,7 +89,9 @@ export default function RegisterPage({ onNavigate }: { onNavigate: (page: string
         </p>
 
         {message && (
-          <p className="text-center text-sm text-red-600 mt-2">{message}</p>
+          <p className={`text-center text-sm mt-2 ${message.includes("successful") ? "text-green-600" : "text-red-600"}`}>
+            {message}
+          </p>
         )}
       </form>
     </div>

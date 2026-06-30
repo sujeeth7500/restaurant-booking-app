@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { ArrowLeft, IndianRupee } from 'lucide-react';
 import { restaurants, menuItems } from '../data';
 import { MenuItem } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface MenuPageProps {
   restaurantId: string;
@@ -24,13 +25,17 @@ export default function MenuPage({ restaurantId, onNavigate }: MenuPageProps) {
       Desserts: [],
       Drinks: [],
     };
-
     restaurantMenu.forEach((item) => {
       categories[item.category].push(item);
     });
-
     return categories;
   }, [restaurantMenu]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem("user");
+    onNavigate("login");
+  };
 
   if (!restaurant) {
     return (
@@ -43,20 +48,14 @@ export default function MenuPage({ restaurantId, onNavigate }: MenuPageProps) {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* 🔥 LOGOUT BUTTON ADDED */}
       <div className="absolute top-5 right-5 z-20">
         <button
-          onClick={() => {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            onNavigate("login");
-          }}
+          onClick={handleLogout}
           className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md"
         >
           Logout
         </button>
       </div>
-      {/* 🔥 END LOGOUT */}
 
       <div
         className="relative h-64 bg-cover bg-center"
@@ -89,13 +88,11 @@ export default function MenuPage({ restaurantId, onNavigate }: MenuPageProps) {
 
         {Object.entries(categorizedMenu).map(([category, items]) => {
           if (items.length === 0) return null;
-
           return (
             <div key={category} className="mb-12">
               <h3 className="text-2xl font-bold text-gray-800 mb-6 pb-2 border-b-2 border-orange-500">
                 {category}
               </h3>
-
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map((item) => (
                   <MenuItemCard key={item.id} item={item} />
@@ -109,11 +106,7 @@ export default function MenuPage({ restaurantId, onNavigate }: MenuPageProps) {
   );
 }
 
-interface MenuItemCardProps {
-  item: MenuItem;
-}
-
-function MenuItemCard({ item }: MenuItemCardProps) {
+function MenuItemCard({ item }: { item: MenuItem }) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <div className="h-40 overflow-hidden">
@@ -123,11 +116,9 @@ function MenuItemCard({ item }: MenuItemCardProps) {
           className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
         />
       </div>
-
       <div className="p-4">
         <h4 className="text-lg font-bold text-gray-800 mb-2">{item.name}</h4>
         <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
-
         <div className="flex items-center justify-between">
           <div className="flex items-center text-orange-600 font-bold text-lg">
             <IndianRupee className="w-4 h-4" />

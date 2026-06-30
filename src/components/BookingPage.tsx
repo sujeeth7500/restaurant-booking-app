@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { restaurants, tables } from "../data";
 import { Customer } from "../types";
+import { supabase } from "../lib/supabase";
 
 interface BookingPageProps {
   restaurantId: string;
@@ -82,15 +83,14 @@ export default function BookingPage({
   useEffect(() => {
     if (!selectedDate) return;
 
-    fetch(
-      `/api/booking/availability?restaurantId=${restaurantId}&date=${selectedDate}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        const takenTimes = data.map((b: any) => b.time);
-        setBookedSlots(takenTimes);
-      })
-      .catch(() => setBookedSlots([]));
+    supabase
+      .from("bookings")
+      .select("time")
+      .eq("restaurant_id", restaurantId)
+      .eq("date", selectedDate)
+      .then(({ data }) => {
+        setBookedSlots(data ? data.map((b: any) => b.time) : []);
+      });
   }, [selectedDate, restaurantId]);
 
   // Priority customer check
@@ -160,8 +160,8 @@ export default function BookingPage({
       {/* LOGOUT */}
       <div className="absolute top-5 right-5">
         <button
-          onClick={() => {
-            localStorage.removeItem("token");
+          onClick={async () => {
+            await supabase.auth.signOut();
             localStorage.removeItem("user");
             onNavigate("login");
           }}

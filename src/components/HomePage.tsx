@@ -1,27 +1,28 @@
 import { UtensilsCrossed } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
 }
 
 export default function HomePage({ onNavigate }: HomePageProps) {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem("user");
+    onNavigate("login");
+  };
+
   return (
     <div className="min-h-screen">
 
-      {/* 🔥 LOGOUT BUTTON (added) */}
       <div className="absolute top-5 right-5 z-20">
         <button
-          onClick={() => {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            onNavigate("login");
-          }}
+          onClick={handleLogout}
           className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md"
         >
           Logout
         </button>
       </div>
-      {/* 🔥 END LOGOUT */}
 
       <div
         className="relative h-screen bg-cover bg-center"
@@ -50,7 +51,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             Experience fine dining at your fingertips.
           </p>
 
-          {/* ⭐ MAIN BUTTON */}
           <button
             onClick={() => onNavigate('restaurants')}
             className="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-lg px-12 py-4 rounded-lg shadow-lg transform transition hover:scale-105 active:scale-95"
@@ -58,7 +58,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             Find Restaurants
           </button>
 
-          {/* ⭐ NEW: MY BOOKINGS BUTTON */}
           <button
             onClick={() => onNavigate('mybookings')}
             className="mt-4 bg-gray-800 hover:bg-gray-900 text-white font-semibold text-lg px-12 py-4 rounded-lg shadow-lg transform transition hover:scale-105 active:scale-95"
